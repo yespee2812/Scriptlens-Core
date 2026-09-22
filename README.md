@@ -4,41 +4,66 @@ Structural editing intelligence for screenplays: **orphan scenes**, **simulate c
 
 The v3 **customer product** is structure-only. Plot contradiction detection (`plot_contradiction.py`) remains in the repo for **internal CI and corpus evaluation**; it is not exposed in the web app.
 
-**Status:** Customer v1 features are implemented and testable locally. See [`docs/SCRIPTLENS_STATUS_REPORT.md`](docs/SCRIPTLENS_STATUS_REPORT.md) for gaps (deploy, auth, simulate regression corpus).
+**Status:** Personal project. Customer v1 features run locally (and in Docker). There are **no production users**. The core path is **deterministic NLP and graph analysis** — an LLM does not decide orphans, cuts, or edits. MiniLM is an optional bounded embedding signal for semantic edges, not a decision model. See [`docs/SCRIPTLENS_STATUS_REPORT.md`](docs/SCRIPTLENS_STATUS_REPORT.md) for gaps (cloud deploy, auth, simulate regression corpus).
+
+**License:** [MIT](LICENSE)
 
 ---
 
-## Requirements
+## Quick start (Docker)
+
+Requires [Docker](https://docs.docker.com/get-docker/). The first build downloads spaCy and MiniLM (several hundred MB).
+
+```bash
+docker build -t scriptlens .
+docker run --rm -p 8000:8000 scriptlens
+```
+
+Open **http://localhost:8000**. Health check: `http://localhost:8000/api/health`.
+
+---
+
+## Requirements (local)
 
 - Python **3.10+**
-- Windows PowerShell (paths below use `venv\Scripts\`; adjust on macOS/Linux)
-
----
-
-## Setup
-
-```powershell
-cd scriptlensCore
-
-python -m venv venv
-venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-python -m spacy download en_core_web_sm
-
-# First run only — caches the MiniLM model for orphan semantic edges
-venv\Scripts\python.exe scripts/precache_osd_semantic.py
-```
+- Windows, macOS, or Linux
 
 Always use the venv interpreter for commands in this repo.
 
 ---
 
-## Run the web app
+## Setup (local)
+
+**Windows (PowerShell):**
 
 ```powershell
-venv\Scripts\python.exe run_api.py
+python -m venv venv
+venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+python -m spacy download en_core_web_sm
+python scripts/precache_osd_semantic.py
 ```
+
+**macOS / Linux:**
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+python -m spacy download en_core_web_sm
+python scripts/precache_osd_semantic.py
+```
+
+The precache step is first-run only. It stores the MiniLM model used for orphan semantic edges.
+
+---
+
+## Run the web app
+
+**Windows:** `venv\Scripts\python.exe run_api.py`  
+**macOS / Linux:** `venv/bin/python run_api.py`
 
 Open **http://localhost:8000**, upload a `.fountain` or `.pdf`, then use the workspace:
 
@@ -55,24 +80,26 @@ Sessions are in-memory and expire after **24 hours** (configurable via `SESSION_
 
 Matches the customer product scope (no contradictions):
 
-```powershell
+```bash
 # Full structure report
-.\run_scriptlens.ps1 tests\corpus\input\drama_5scene_errors.fountain --structure-only
+python run_scriptlens.py tests/corpus/input/drama_5scene_errors.fountain --structure-only
 
 # Simulate removing one scene
-.\run_scriptlens.ps1 tests\corpus\input\drama_5scene_errors.fountain --structure-only --simulate-cut scene_002
+python run_scriptlens.py tests/corpus/input/drama_5scene_errors.fountain --structure-only --simulate-cut scene_002
 ```
+
+On Windows you can use the same commands with `venv\Scripts\python.exe`, or `.\run_scriptlens.ps1`.
 
 Legacy full analysis (includes contradictions — internal use):
 
-```powershell
-.\run_scriptlens.ps1 tests\corpus\input\drama_5scene_errors.fountain
+```bash
+python run_scriptlens.py tests/corpus/input/drama_5scene_errors.fountain
 ```
 
 PDF conversion (manual pipeline):
 
-```powershell
-venv\Scripts\python.exe scripts\convert_pdf_to_fountain.py path\to\script.pdf
+```bash
+python scripts/convert_pdf_to_fountain.py path/to/script.pdf
 ```
 
 ---
@@ -98,8 +125,8 @@ Base URL: `http://localhost:8000/api`
 
 Example upload:
 
-```powershell
-curl -X POST http://localhost:8000/api/upload `
+```bash
+curl -X POST http://localhost:8000/api/upload \
   -F "file=@tests/corpus/input/drama_5scene_errors.fountain"
 ```
 
@@ -109,19 +136,19 @@ Full contracts: [`docs/ARCHITECTURE_v3_STRUCTURE.md`](docs/ARCHITECTURE_v3_STRUC
 
 ## Tests and CI
 
-```powershell
+```bash
 # Unit + API tests (236+)
-venv\Scripts\python.exe -m pytest tests/ -q
+python -m pytest tests/ -q
 
 # Orphan golden fixtures
-venv\Scripts\python.exe scripts/run_orphan_spec_eval.py
+python scripts/run_orphan_spec_eval.py
 
 # Planted contradiction corpus (internal CI gate)
-venv\Scripts\python.exe scripts/run_corpus_batch.py --compare-ground-truth
-venv\Scripts\python.exe scripts/score_corpus_baseline.py --check --min-recall 1.0 --max-false-positives 4
+python scripts/run_corpus_batch.py --compare-ground-truth
+python scripts/score_corpus_baseline.py --check --min-recall 1.0 --max-false-positives 4
 
 # Hollywood clean benchmark (local, gitignored PDFs)
-venv\Scripts\python.exe scripts/run_clean_benchmark.py
+python scripts/run_clean_benchmark.py
 ```
 
 GitHub Actions runs pytest, orphan spec eval, and corpus baseline on push/PR to `main`.
@@ -144,6 +171,8 @@ GitHub Actions runs pytest, orphan spec eval, and corpus baseline on push/PR to 
 
 ```text
 scriptlensCore/
+├── Dockerfile                 Local Docker image (web app on :8000)
+├── LICENSE                    MIT
 ├── api/                       FastAPI routes + in-memory sessions
 ├── web/                       Static workspace UI
 ├── scriptlens_structure.py    Structure-only analysis (v3 product path)
@@ -188,7 +217,7 @@ Corpus and benchmarks: [`tests/corpus/README.md`](tests/corpus/README.md).
 
 ## Not in customer v1 yet
 
-- Production hosting (Dockerfile / Hostinger)
+- Production hosting (auth, persistent storage, public URL)
 - User accounts, billing, persistent storage
 - `.docx` upload wiring
 - High-risk scene badges in web UI (computed in engine)

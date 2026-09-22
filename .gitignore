@@ -1,5 +1,6 @@
 # Waitlist emails collected on Hostinger (never commit)
 landing/waitlist.csv
+landing/backups/*.csv
 
 venv/
 __pycache__/
@@ -21,3 +22,15 @@ tests/corpus/benchmark/clean_produced/*
 !tests/corpus/benchmark/clean_produced/.gitkeep
 
 tests/corpus/benchmark/reports/
+
+# Dropped hero scripts and generated V0 packets (may include private drafts)
+docs/corpus_inbox/*
+!docs/corpus_inbox/README.md
+!docs/corpus_inbox/.gitkeep
+docs/corpus_results/*
+!docs/corpus_results/README.md
+
+# Job-hunt materials — never publish (resume, CTC, interview packs)
+docs/interview/
+Interview/
+

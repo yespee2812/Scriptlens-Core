@@ -1,0 +1,30 @@
+.git
+.github
+.gitignore
+.cursor
+.cursorrules
+.pytest_cache
+.venv
+venv
+__pycache__
+*.py[cod]
+*.egg-info
+.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db
+dist
+build
+
+# Job-hunt materials and local secrets
+docs/interview
+Interview
+landing/waitlist.csv
+landing/backups
+
+# Copyrighted / generated local artifacts
+tests/corpus/benchmark/clean_produced
+tests/corpus/benchmark/reports
+docs/corpus_inbox
+docs/corpus_results
